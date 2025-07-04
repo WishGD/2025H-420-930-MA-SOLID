@@ -1,0 +1,17 @@
+[project]
+name = "solid"
+version = "0.1.0"
+description = "Exercice de mise en pratique des principes SOLID pour le cours 420-930-MA au Collège de Maisonneuve."
+readme = "README.md"
+authors = [
+    { name = "Vincent Archambault-Bouffard", email = "varchambaultbouffard@cmaisonneuve.qc.ca" }
+]
+requires-python = ">=3.11"
+dependencies = []
+
+[project.scripts]
+main = "solid:main"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
