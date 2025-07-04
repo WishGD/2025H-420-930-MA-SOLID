@@ -78,8 +78,8 @@ class Livre(ILivre):
 class Bibliotheque:
     def __init__(self):
         self.inventaire: dict[str, int] = {}
-        self.notif_service = NotificationServiceMail()
-        self.notif_service_sms = NotificationServiceSMS()
+        self.notif_service = NotificationService()
+        self.notif_service_sms = NotificationService()
 
     def ajouter_livre(self, livre: Livre, quantite: int):
         self.inventaire[livre.isbn] = self.inventaire.get(livre.isbn, 0) + quantite
@@ -88,11 +88,11 @@ class Bibliotheque:
         """Génère un rapport et l'envoie par email."""
         # Génération du rapport 
         if type_rapport == "pdf":
-            rapport = RapportService().generer_pdf(self.inventaire)
+            rapport = RapportPDF().generer_pdf(self.inventaire)
         elif type_rapport == "csv":
-            rapport = RapportService().generer_csv(self.inventaire)
+            rapport = RapportCSV().generer_csv(self.inventaire)
         elif type_rapport == "html":
-            rapport = RapportService().generer_html(self.inventaire)
+            rapport = RapportHTML().generer_html(self.inventaire)
         else:
             rapport = f"Rapport inventaire : {len(self.inventaire)} titres"
 
@@ -114,6 +114,8 @@ class Utilisateur:
         self.nom = nom
         self.mail = mail
 
+
+class disponibiliteService:
     def generer_rapport_disponibilite(self, inventaire: dict[str, int]) -> str:
         """Génère un rapport d'emprunts."""
         lignes = [f"{isbn}: {qte}" for isbn, qte in inventaire.items()]
@@ -123,7 +125,7 @@ class Utilisateur:
 class GestionnaireEmprunt:
     def __init__(self):
         self.emprunts: list[tuple[str, str]] = []
-        self.notif_service = NotificationServiceMail()
+        self.notif_service = NotificationService()
 
     def emprunter(self, utilisateur: Utilisateur, livre: Livre):
         # logique de vérification minimaliste
@@ -133,6 +135,12 @@ class GestionnaireEmprunt:
             utilisateur.mail, "Emprunt confirmé", message
         )
 
+
+class gestionnaireRetour:
+    def __init__(self):
+        self.emprunts: list[tuple[str, str]] = []
+        self.notif_service = NotificationService()
+
     def retourner(self, utilisateur: Utilisateur, livre: Livre):
         self.emprunts.remove((utilisateur.mail, livre.isbn))
         message = f"{utilisateur.nom} a retourné '{livre.titre}'"
@@ -141,29 +149,28 @@ class GestionnaireEmprunt:
         )
 
 
-class NotificationServiceMail:
-    def envoyer_email(self, to: str, subject: str, body: str):
-        # Logique d'envoi d'e-mail (mock)
-        print(f"Envoi e‑mail à {to} : '{subject}' – {body}")
+class NotificationService:
+    def envoyer(self, type_: str, destinataire: str, sujet_ou_message: str, corps: str = ""):
+        if type_ == "email":
+            print(f"Envoi e‑mail à {destinataire} : '{sujet_ou_message}' – {corps}")
+        elif type_ == "sms":
+            print(f"Envoi SMS à {destinataire} : {sujet_ou_message}")
+        else:
+            raise ValueError("Type de notification inconnu")
+   
 
-class NotificationServiceSMS(NotificationServiceMail):
-    def envoyer_sms(self, number: str, message: str):
-        # Logique d'envoi de SMS (mock)
-        print(f"Envoi SMS à {number} : {message}")
-    
-    def envoyer_email(self, to: str, subject: str, body: str):
-        raise NotImplementedError("Envoi d'e-mail non supporté par NotificationServiceSMS")
-
-class RapportService:
+class RapportPDF:
     def generer_pdf(self, inventaire: dict[str, int]) -> str:
         # Génération de PDF, logique mélangée
         return f"PDF – {len(inventaire)} titres dans l'inventaire"
-
+    
+class RapportCSV:
     def generer_csv(self, inventaire: dict[str, int]) -> str:
         # Génération de CSV et HTML dans la même classe
         lignes = [f"{isbn},{qte}" for isbn, qte in inventaire.items()]
         return "isbn,qte\n" + "\n".join(lignes)
-
+    
+class RapportHTML:
     def generer_html(self, inventaire: dict[str, int]) -> str:
         rows = "".join(f"<tr><td>{isbn}</td><td>{qte}</td></tr>" for isbn, qte in inventaire.items())
         return f"<table>{rows}</table>"
